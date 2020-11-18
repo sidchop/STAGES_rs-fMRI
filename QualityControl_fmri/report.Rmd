@@ -1,0 +1,177 @@
+---
+title: "STAGES rs-fMRI Quality Control"
+author: "Sidhant Chopra, Alex Fornito"
+date: "02/1/2020"
+output: html_document
+---
+
+## 1. Raw Scans  \
+Number of scanning sessions undertaken in STAGES MRI study: **204** \
+Number of rs-MRI scans completed: **202** (withdrew before resting-state fMRI sequence: n=**2**) \
+
+***
+## 2. Visual QC and [MRIQC](https://mriqc.readthedocs.io/en/stable/) \
+Group report for T1 images: \
+```{r, out.width="60%", out.height="60%", echo=FALSE}
+  knitr::include_graphics("parc/t1_mriqc.png")
+```
+
+\
+
+Group report for bold images: \
+```{r, out.width="60%", out.height="60%", echo=FALSE}
+  knitr::include_graphics("parc/t2_mriqc.png")
+```
+
+\
+
+Based on MRIQC and visual QC **2** scans were excluded from further processing and analysis: 
+
+ID    | session| reason
+------|--------|--------
+11    | 1      | Signal dropout in frontal lobe likely due to braces 
+49    | 2      | Signal dropout in posterior regions 
+------------------------
+
+ID 11 session-1: \
+```{r, out.width="60%", out.height="60%", echo=FALSE}
+knitr::include_graphics("parc/11_excluded.png")
+```
+
+ID 49 session-2: \
+```{r, out.width="60%", out.height="60%", echo=FALSE}
+knitr::include_graphics("parc/49_excluded.png")
+```
+
+
+***
+
+## 3. Processing  \
+
+```{r, echo=FALSE}
+library(DiagrammeR)
+DiagrammeR("graph LR;
+    A(fmriprep v1.4.)-->B(ICA-AROMA);
+    B-->C(2P regression);
+    C-->D(HPF and detrending)
+    D-->E(GSR)")
+       
+```
+
+
+***
+
+## 4. Headmotion exclusion [Parkes et al., 2018](https://www.sciencedirect.com/science/article/pii/S1053811917310972)  \
+Stringent criteria from Parkes et al., (2018): Scans were excluded if any of the following criteria were true for each rs-fMRI scan: \
+**(i)** mean Frame-wise Displacement (mFD) > 0.25 mm; \
+**(ii)** more than 20% of the FDs were above 0.2 mm;  \
+**(iii)** if any FDs were greater than 5mm (adapted from Satterthwaite et al.,
+2013). For both lenient and stringent criteria, FDJenk was used.  \
+An additional criteria **(iv)** involved the exclusion of participants based on criteria contingent on volume censoring methods.\
+
+Based on stringent head motion exclusion criteria **8** scans were excluded from further processing and analysis \
+\
+
+ID  | session| criteria met
+----|--------|---------------
+19  | 1      | i, ii
+19  | 3      | i, ii
+36c | 1      | ii, iii
+36c | 3      | ii, iii
+66c | 3      | i, ii, iii
+69c | 3      | i, ii, iii
+70c | 1      | iii
+75c	| 3      | i, iii
+---------------------------
+
+***
+
+## 5. Excluding ROIS with low/poor signal  \
+\
+Method: [Brown et al. 2019, Neuron](https://www.sciencedirect.com/science/article/abs/pii/S0896627319307433?via%3Dihub)\
+Regions were screened regions for insufficient fMRI BOLD signal intensity by first calculating each region’s mean BOLD signal across the 438 scans. The regional BOLD intensity values were then sorted from largest to smallest, and  the 'elbow' of this distribution using the pairwise differences was identified. Here ,the 'elbow' was between regions RH_Limbic_TempPole_2 (μ=350.95) and LH_Limbic_OFC_1(μ=315.92):  \
+
+```{r, out.width = "500px", echo=FALSE}
+knitr::include_graphics("parc/elbow.png")
+```
+
+\
+This led us to exclude 16 regions:, LH_Limbic_OFC_2	, LH_Limbic_OFC_3	, LH_Limbic_TempPole_1, #LH_Limbic_TempPole_2, LH_Limbic_TempPole_3, LH_Limbic_TempPole_4, LH_Limbic_TempPole_6, LH_Default_Temp_2, #RH_Limbic_OFC_1	, RH_Limbic_OFC_3	, RH_Limbic_OFC_4	, RH_Limbic_TempPole_1, RH_Limbic_TempPole_2, #RH_Limbic_TempPole_3, RH_Limbic_TempPole_4, RH_Limbic_TempPole_5:
+
+Excluded rois overlayed on the mean epi of all subjects: \
+```{r, out.width="60%", out.height="60%", echo=FALSE}
+knitr::include_graphics("parc/bung_1.png")
+```
+```{r, out.width="60%", out.height="60%", echo=FALSE}
+knitr::include_graphics("parc/bung_2.png")
+```
+```{r, out.width="60%", out.height="60%", echo=FALSE}
+knitr::include_graphics("parc/bung_3.png")
+```
+
+\
+
+***
+## 6. Carpet plots
+
+The visualization of all voxel time series as a carpet plot (or grayplot), is a very useful tool in detecting and understanding artifacts and hence evaluating noise-correction techniques. The carpet plot is a heatmap visualization of the voxel x time matrix, X (V x T for V voxels and T time points), usually after z-scoring each voxel time series (rows of X), resulting in the normalized matrix used here ([Aquino et al., 2020](http://dx.doi.org/10.1016/j.neuroimage.2020.116614)). Here, we calculated carpet plots before and after processing to ensure that signal deflections and dropout were reduced. Historically, voxels in carpet plots are ordered somewhat arbitrarily, thus we used `cluster-similarity ordering', which reorders voxels such that those with similar BOLD dynamics are placed close to one another ([learn more](https://bmhlab.github.io/DiCER_results/)).
+
+```{r, out.width="60%", out.height="60%", echo=FALSE}
+knitr::include_graphics("parc/2020-11-13 13.28.16.gif")
+```
+
+
+***
+## 5. Functional connectivity (FC) matricies \
+
+FC mats for each subject after all processing has been applied. ROIs are sorted by  cortical (left then right hemisphere) then subcortex regions: \
+\
+\
+<button class="btn btn-primary" data-toggle="collapse" data-target="#BlockName2"> Show/Hide FC mats 
+ </button>  
+<div id="BlockName2" class="collapse">  
+```{r, echo=FALSE, echo=FALSE}
+plots <- list.files("con_plots_gmr/", full.names = TRUE)
+knitr::include_graphics(plots)
+```
+<button class="btn btn-primary" data-toggle="collapse" data-target="#BlockName2"> Hide
+<div id="BlockName2" class="collapse">  
+ </button>  
+</div> \
+
+
+Mean FC matrix across all scans: \
+```{r, out.width="60%", out.height="60%", echo=FALSE}
+knitr::include_graphics("gmr.png")
+```
+
+
+***
+## 6. Group level QC: QC-FC correlations
+
+#### Correlation plots between FC at each edge and Mean FD: \
+Correlations between mean framewise displacement and the
+functional connectivity between each pair of regions, computed
+across subjects.
+\
+```{r, out.width="30%", out.height="30%", echo=FALSE}
+knitr::include_graphics(c("parc/fmriprep.png", "parc/fmriprep+aroma+2p+hpfdt.png", "parc/fmriprep+aroma+2p+hpfdt+gmr.png"))
+```
+\
+
+#### Distribution of QC-FC correlations: \
+```{r, out.width="50%", out.height="40%", echo=FALSE}
+knitr::include_graphics(c("parc/qc_fc_dist.png"))
+```
+\
+
+#### QC-FD-Distance Correlation \
+Correlation between FC-FD correlation and pairwise euclidean distances between centroids (COG) of each ROI pair (keeping in mind y-axis limits is not consistent between plots):
+\
+
+```{r, out.width="25%", out.height="25%", echo=FALSE}
+knitr::include_graphics(c("parc/qc_fc_distance/fmriprep.png", "parc/qc_fc_distance/fmriprep.aroma.png",
+                          "parc/qc_fc_distance/prep.aroma.2p.hpfdt.png", "parc/qc_fc_distance/prep.aroma.2p.hpfdt.gmr.png"))
+```
+
+***
