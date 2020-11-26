@@ -1,3 +1,5 @@
+%Please see: https://github.com/StuartJO/plotSurfaceROIBoundary for details
+
 hemisphere = 'rh'
 
 %%

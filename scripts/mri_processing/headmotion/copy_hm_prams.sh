@@ -1,1 +1,0 @@
-for ses in 1 2 4 ; do  for s in `cat ses${ses}_list.txt` ; do cp /home/scho0011/kg98/Sid/STAGES/STAGES_fmriprep/data/fmriprep_work/sub-${s}/fmriprep_wf/single_subject_${s}_wf/func_preproc_ses_${ses}_task_rest_wf/bold_hmc_wf/mcflirt/sub-${s}_ses-${ses}_task-rest_bold*mcf.nii.gz.par /home/scho0011/kg98/Sid/STAGES/STAGES_fmriprep/headmotion/hm_prams ;  done ; done 
