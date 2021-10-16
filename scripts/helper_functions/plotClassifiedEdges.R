@@ -75,8 +75,8 @@ colnames(unq) <- NULL
 
   for (i in 1:dim(unq)[1]) {
     for (j in i:dim(unq)[1]) {
-      index_i  <- which(ids==i, arr.ind = T)
-      index_j <- which(ids==j, arr.ind = T)
+      index_i  <- which(ids==i)
+      index_j <- which(ids==j)
 
       tempsum <- 0
       tempsum <-  sum(adj[c(index_i),  c(index_j)])
@@ -91,8 +91,8 @@ colnames(unq) <- NULL
 
    normFactor <- length(index_i)*length(index_j)
 
-   if(i==j) {normFactor <- (length(index_i)^2)-(length(index_i))/2} #remove diagnal elements with computing within network connections
-
+   if(i==j) {normFactor <- ((length(index_i)^2)-length(index_i))/2} #remove diagnal elements with computing within network connections
+   
    outNorm[i,j] <- tempsum/normFactor
    outNorm[j,i] <- tempsum/normFactor
 
